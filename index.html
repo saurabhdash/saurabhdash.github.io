@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<!-- saved from url=(0025)https://dhruvkuchhal.com/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script async="" src="./index_files/analytics.js"></script><script>(function(){function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'updateLocation':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          hookedObj.genLat = message.info.coords.lat;
+          hookedObj.genLon = message.info.coords.lon;
+          hookedObj.fakeGeo = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}hookGeo();})()</script>
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="PhD student in Computer Science at Georgia Tech, interested in Security and Privacy.">
+    <meta name="keywords" content="Computer Science, CS, Georgia Tech, GT, Security, Privacy, Dhruv, Kuchhal">
+    <meta name="author" content="Dhruv Kuchhal">
+    
+    <link rel="icon" href="https://dhruvkuchhal.com/assets/favicon.ico">
+
+    <title>Dhruv Kuchhal | GT</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="./index_files/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="./index_files/academicons.min.css">
+    <link rel="stylesheet" href="./index_files/font-awesome.min.css">   
+    
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="./index_files/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="./index_files/template.css" rel="stylesheet">
+  <script data-dapp-detection="">!function(){let e=!1;function n(){if(!e){const n=document.createElement("meta");n.name="dapp-detected",document.head.appendChild(n),e=!0}}if(window.hasOwnProperty("ethereum")){if(window.__disableDappDetectionInsertion=!0,void 0===window.ethereum)return;n()}else{var t=window.ethereum;Object.defineProperty(window,"ethereum",{configurable:!0,enumerable:!1,set:function(e){window.__disableDappDetectionInsertion||n(),t=e},get:function(){if(!window.__disableDappDetectionInsertion){const e=arguments.callee;e&&e.caller&&e.caller.toString&&-1!==e.caller.toString().indexOf("getOwnPropertyNames")||n()}return t}})}}();</script><meta name="dapp-detected"></head>
+
+  <body data-new-gr-c-s-check-loaded="14.1052.0" data-gr-ext-installed="">
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://dhruvkuchhal.com/#">Dhruv Kuchhal</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <!-- <li><a href="#about">About</a></li> -->
+            <!-- <li><a href="#publications">Publications</a></li> -->
+            <li><a href="https://dhruvkuchhal.com/cv_dhruv.pdf">CV</a></li>
+            <li><a href="https://scholar.google.com/citations?user=l3Yg8PsAAAAJ&amp;hl=en"><i class="ai ai-google-scholar ai-lg"></i></a></li>
+            <li><a href="https://twitter.com/kuchhal_dhruv" class="fa fa-twitter fa-lg"></a></li>
+            <li><a href="https://www.linkedin.com/in/dhruv96/" class="fa fa-linkedin fa-lg"></a></li>
+            
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <section id="about">
+      <div class="row">
+        <div class="col-xs-3">
+          <img src="./index_files/headshot.jpeg" class="img-rounded img-responsive" alt="Dhruv Kuchhal">
+        </div>
+
+        <div class="col-xs-9">
+          <h3>About</h3>
+          <p>
+            I’m a third year <b>PhD student in Computer Science at Georgia Tech</b> (GT), fortunate to be advised by <a href="https://frankli.ece.gatech.edu/">Dr. Frank Li</a> in the <a href="https://scp.cc.gatech.edu/">School of Cybersecurity and Privacy (SCP)</a>.
+          </p>
+          <p>
+            My research interests lie broadly in <b>data-driven studies of real-world computer security problems</b>, often involving large-scale data mining of network measurements. Currently, I'm working on exploring passwordless authentication as an alternate to passwords online.
+          </p>
+          <p>
+            In the Summer of 2021, I interned with the Applied Research (Information Security) team at PayPal, supervised by <a href="https://www.adamoest.com/">Dr. Adam Oest</a> and <a href="https://www.linkedin.com/in/rc-johnson-7234aa74/">Dr. RC Johnson</a>.
+          </p>
+          <p>
+            Previously, I have worked on:
+            </p><ul>
+              <li><b>Human Factors in Security with <a href="https://elissaredmiles.com/">Prof. Elissa Redmiles</a> and <a href="https://users.umiacs.umd.edu/~mmazurek/index.html">Prof. Michelle Mazurek</a> @ UMD:</b>
+                <ul>
+                  <li>Measuring and improving readability of security advice.</li>
+                  <li>Evaluating response biases in security user studies.</li>
+                </ul>
+              </li>
+              <li><b>Security and Privacy in Social Computing with <a href="https://www.iiit.ac.in/people/faculty/PKguru/">Prof. Ponnurangam Kumaraguru</a> @ IIIT-D </b>(moved to IIIT-H):
+              <ul>
+                <li>Detecting cross-platform spam on online social networks.</li>
+                <li>Detecting and mitigating misinformation on WhatsApp.</li>
+              </ul>
+            </li>
+            </ul>
+          <p></p>
+          <p>
+            For the 2021-2022 AY, I'm serving on the board of <a href="https://scsgsa.cc.gatech.edu/">Graduate Student Association for the School of Computer Science (SCS-GSA)</a> as their Communications Chair, and as a board member on the GT Student Employee Advisory Board. 
+          </p>
+          <p>
+            Reach me at dkuchhal@pm.me.
+          </p>
+        </div>
+      </div>
+      </section>
+      
+      <hr>
+
+      <section id="publications">
+        <h3>Publications</h3>
+          
+          <h4>Conference:</h4>
+          <ul>
+            <li>
+              <b> 
+              <a href="https://dhruvkuchhal.com/papers/kuchhal2022view.pdf" class="fa fa-file-pdf-o"></a>
+                A View into YouTube View Fraud.</b><br>
+              <b>Dhruv Kuchhal</b> and Frank Li.<br>
+              ACM Web Conference (WWW), 2022.
+              <br><br>
+            </li>
+
+            <li>
+              <b> 
+              <a href="https://dhruvkuchhal.com/papers/kuchhal2021knock.pdf" class="fa fa-file-pdf-o"></a> <a href="https://www.youtube.com/watch?v=AhbAfosAMdk" class="fa fa-youtube-play"></a> <a href="https://dl.acm.org/doi/10.1145/3487552.3487857">
+              Knock and Talk: Investigating Local Network Communications on Websites.</a></b><br>
+              <b>Dhruv Kuchhal</b> and Frank Li.<br>
+              ACM Internet Measurement Conference (IMC), 2021.
+              <br><br>
+            </li>
+  
+            <li>
+              <b><a href="https://dhruvkuchhal.com/papers/camera-ready-emnlp2019.pdf" class="fa fa-file-pdf-o"></a> <a href="https://www.aclweb.org/anthology/D19-1489/">
+              Comparing and Developing Tools to Measure the Readability of Domain-Specific Texts.</a></b><br>
+              Elissa Redmiles, Lisa Maszkiewicz, Emily Hwang, <b>Dhruv Kuchhal</b>, Everest Liu, Miraida Morales, Denis Peskov, Sudha Rao, Rock Stevens, Kristina Gligorić, Sean Kross, Michelle Mazurek, and Hal Daumé III.<br>
+              Empirical Methods in Natural Language Processing (EMNLP), 2019.
+              <br><br>
+            </li>
+  
+
+  
+            <li>
+              <b><a href="https://dhruvkuchhal.com/papers/redmiles2018asking.pdf" class="fa fa-file-pdf-o"> </a> <a href="https://youtu.be/6w4VEWCkLP0" class="fa fa-youtube-play"></a> <a href="https://dl.acm.org/citation.cfm?id=3243740">
+              Asking for a Friend: Evaluating Response Biases in Security User Studies</a></b><br>
+              Elissa Redmiles, Ziyun Zhu, Sean Kross, <b>Dhruv Kuchhal</b>, Tudor Dumitras, and Michelle Mazurek.<br>
+              ACM Conference on Computer and Communications Security (CCS), 2018.
+              <br><br>
+            </li>
+  
+            <li>
+              <b><a href="https://dhruvkuchhal.com/papers/gupta2018under.pdf" class="fa fa-file-pdf-o"> </a><a href="https://dl.acm.org/citation.cfm?id=3201065">
+              Under the Shadow of Sunshine: Characterizing Spam Campaigns Abusing Phone Numbers Across Online Social Networks.</a></b><br>
+              Srishti Gupta, <b>Dhruv Kuchhal</b>, Payas Gupta, Mustaque Ahamad, Manish Gupta, and Ponnurangam Kumaraguru.<br>
+              ACM Web Science Conference (WebSci), 2018.<br>
+              <i class="fa fa-trophy"></i> <b>Runner Up Best Student Paper Award</b>
+              <br><br>
+            </li>
+          </ul>
+
+        <h4>Journal:</h4>
+        <ul>
+          <li>
+            <b><a href="https://dhruvkuchhal.com/papers/gupta2019angel.pdf" class="fa fa-file-pdf-o"></a> <a href="https://webscience-journal.net/webscience/article/view/67">
+            Angel or Demon? Characterizing Variations Across Twitter Timeline of Technical Support Campaigners.</a></b><br>
+            Srishti Gupta, Gurpreet Singh Bhatia, Saksham Suri, <b>Dhruv Kuchhal</b>, Payas Gupta, Mustaque Ahamad, Manish Gupta, and Ponnurangam Kumaraguru.<br>
+            The Journal of Web Science, 2019.<br>
+            <i class="fa fa-star"></i> <b>Invited article from ACM WebScience, 2018</b>
+            <br><br>
+          </li>
+        </ul>
+
+        <h4>Workshop:</h4>
+        <ul>
+          <li>
+            <b><a href="https://dhruvkuchhal.com/papers/redmilesfirst.pdf" class="fa fa-file-pdf-o"></a> <a href="https://www.ieee-security.org/TC/SPW2018/ConPro/papers/redmiles-conpro18.pdf">
+            First Steps Toward Measuring the Readability of Security Advice.</a></b><br>
+            Elissa Redmiles, Miraida Morales, Lisa Maszkiewicz, Rock Stevens, Everest Liu, <b>Dhruv Kuchhal</b>, and Michelle L. Mazurek.<br>
+            IEEE Security &amp; Privacy Workshop on Technology and Consumer Protection (ConPro), 2018.<br>
+            <br><br>
+          </li>
+        </ul>
+
+        <h4>Poster:</h4>
+        <ul>
+          <li>
+            <b><a href="https://dhruvkuchhal.com/papers/usenix18_poster_securityAdviceQuality_proposal.pdf" class="fa fa-file-pdf-o"></a>
+            Measuring Security Advice Quality: First Steps.</b><br>
+            Elissa Redmiles, Emily Hwang, <b>Dhruv Kuchhal</b>, Everest Liu, Lisa Maszkiewicz, Miraida Morales, Denis Peskov, Rock Stevens, and Michelle L. Mazurek.<br>
+            USENIX Security Symposium, 2018.<br>
+            <br><br>
+          </li>
+          <li>
+            <b><a href="https://dhruvkuchhal.com/papers/ccs18_poster_equitableSecurity.pdf" class="fa fa-file-pdf-o"></a> <a href="https://dl.acm.org/citation.cfm?id=3278507">
+            Equitable Security: Optimizing Distribution of Nudges and Resources.</a></b><br>
+            Elissa Redmiles, John P. Dickerson, Krishna Gummadi and Michelle L. Mazurek (presenter: <b>Dhruv Kuchhal</b>).<br>
+            ACM Conference on Computer and Communications Security (CCS), 2018.<br>
+            <br><br>
+          </li>
+        </ul>
+
+        <!-- <h4>Currently under review:</h4>
+          <ul>
+            <li>
+              <b>
+              A View into YouTube View Fraud.</b><br>
+              <b>Dhruv Kuchhal</b> and Frank Li.<br>
+              <br><br>
+            </li>
+          </ul> -->
+      </section>
+      <hr>
+      <p align="center">Last updated in February 2022.</p>
+    </div><!-- /.container -->
+    
+    
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="./index_files/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')</script>
+    <script src="./index_files/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="./index_files/ie10-viewport-bug-workaround.js"></script>
+  
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-106234195-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>
